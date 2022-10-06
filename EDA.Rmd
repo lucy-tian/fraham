@@ -1,0 +1,37 @@
+---
+title: "EDA"
+author: "Michelle Dai"
+date: "2022-10-06"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(foreign)
+
+data <- read.dta("fram.dta")
+```
+
+```{r}
+library(dplyr)
+data_CHD_Death <- data[data$cexam != 0,]
+
+data_CHD_Death_try <- data_CHD_Death[,c(1, 2, 3, 4, 5, 9, 10, 11, 12, 14, 15, 16, 17, 18)]
+data_CHD_Death_try <- data_CHD_Death_try[complete.cases(data_CHD_Death_try),]
+```
+
+
+```{r}
+library(ggplot2)
+
+ggplot(data_CHD_Death_try, aes(x=age, y=ht)) + geom_point()
+
+ggplot(data_CHD_Death_try, aes(x=as.factor(sex), y=age)) + geom_boxplot()
+
+ggplot(data_CHD_Death_try, aes(x=wt, y=ht)) + geom_point()
+```
+
+
