@@ -99,6 +99,8 @@ ggtitle('Systolic Blood pressure VS. height, stratified by sex')
 
 From the plot, we can see male and females have generally similar distribution in terms of systolic blood pressure. However, for subjects with `sbp` larger than 200, we see `sbq` increase with height in females while `sbq` decrease with height in males. Difference in height distribution among males and females is again validated.  
 
+After investigating the relationship between each feature, we then delve into each one of them to compare the distribution among CHD diagnosed patients and CHD non-diagnosed patients.
+
 
 ```{r}
 ggplot(data, aes(x=age, fill=as.factor(diag))) +
