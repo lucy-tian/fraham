@@ -1,6 +1,6 @@
 ---
 title: "EDA"
-author: "Michelle Dai"
+author: "Group 10"
 date: "2022-10-06"
 output: pdf_document
 ---
@@ -11,27 +11,103 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(foreign)
-
 data <- read.dta("fram.dta")
 ```
+### Date Cleaning
+According to the documentation of the Framingham Dataset, the original data has a total of 5209 observations and 18 variables recorded. For column `scl1`, we have a total of 2, 037 missing values. Thus for the sake of retaining as much data as possible for future analysis, we will drop the `scl1` column. 
+
+To deal with other missing values, we approach with the simple method of dropping observations that contain on or more missing values. Other methods such as imputation will be used later if see fit.
+
+```{r, message=FALSE}
+library(dplyr)
+library(ggplot2)
+data <- data[,-c(13)]
+data <- data[complete.cases(data),]
+```
+
+A total of 4,568 observations and 17 columns are selected for exploratory data analysis.
+
+### Exploratory Data Analysis (EDA)
+We perform EDA based on our primary and secondary questions.
+
+#### Primary Question
+$\textbf{What factors contribute to the diagnosis of coronary heart disease (CHD)?}$
+
+#### Secondary Question
+$\textbf{Is there an association between physiological features (example being height, weight, and blood pressure) and death from CHD?}$
+
+Since we first look at the diagnosis of CHD, create a new column `diag` where observations diagnosed with CHD = 1 and 0 otherwise
 
 ```{r}
-library(dplyr)
-data_CHD_Death <- data[data$cexam != 0,]
-
-data_CHD_Death_try <- data_CHD_Death[,c(1, 2, 3, 4, 5, 9, 10, 11, 12, 14, 15, 16, 17, 18)]
-data_CHD_Death_try <- data_CHD_Death_try[complete.cases(data_CHD_Death_try),]
+data <- data %>% mutate(diag = if_else(cexam == 0, 0, 1))
 ```
+Simple calculation gives us CHD Diagnosis count = 1449 and CHD Death count = 605
+
+
+We then plot a grid that calculates correlation between each variable pairs.
+
+#### Correlation grid
+```{r, message=FALSE, fig.align='center'}
+library(corrplot)
+M = cor(data[, -c(4)])
+corrplot(M, addCoef.col = 'black',  number.cex= 7/(ncol(data) - 4))
+```
+
+
+The plot makes sense as we see very high correlation between variable pairs [`weight`, `mrw`, cor=0.76] and [`dbp`, `sbp`, cor=0.8]. `mrw` - Metropolitan Relative Weight- can be calculated by taking ratio of that person's body weight to the reference weight for that person's height, and systolic and diabolic pressures are highly correlated as they each represent the maximum pressure the heart exerts while beating and the amount of pressure in the arteries between beats.
+
+From the grid above, we see that diagnosis of CHD (`diag`) has a relatively higher correlation with `age`, `sbp` (Systolic blood pressure), and `mrw` (Metropolitan Relative Weight) with values 0.21, 0.21, and 0.15 respectively. Death from CHD (`chd`) has a relatively higher correlation with `age`, `sc2`, `sbp`, and `weight`, with values 0.2, 0.16, 0.2, and 0.14 respectively. 
+
+
+We proceed to examine distribution of important variables respectively
+
+
+#### Diagnosis frequency per exam
+```{r, fig.align='center'}
+ggplot(data[data$diag!=0,], aes(x=cexam)) + geom_bar() + ggtitle('Diagnosis frequency per exam')
+```
+
+
+From the bar plot above, we see for those diagnosed with CHD, the frequency of diagnosis for each exam generally increases until the 11th exam, which reached the maximum frequency o greater than 120. After the 11th exam, frequency of diagnosis show a downward trend.
+
+#### Weight distribution stratidied by sex
+```{r, fig.align='center'}
+ggplot(data, aes(x=as.factor(sex), y=wt)) + geom_boxplot()+ggtitle('Weight distribution stratified by sex')
+summary(data[data$sex==1,]$wt)
+summary(data[data$sex==2,]$wt)
+```
+
+
+From the side by side box plot above, we see females generally have a lower weight than males. Males have a median values of 167lbs and females 138lbs. In addition, females have more outliers compared to males and includes both the minimum (71lbs) and maximum (300lbs) values of the total sample of subjects studies.
+
+#### Height distribution stratified by sex
+```{r, fig.align='center'}
+ggplot(data, aes(x=as.factor(sex), y=ht)) + geom_boxplot()+ggtitle('Height distribution stratified by sex')
+summary(data[data$sex==1,]$ht)
+summary(data[data$sex==2,]$ht)
+```
+
+
+From the side by side box plot above, we see females generally have a lower height than males. Males have a median values of 67.5 inches and females 62.5 inches. The magnitude of their respective range is relatively the same.
+
+#### Systolic Blood pressure VS. height, stratified by sex
+```{r, message = FALSE, fig.align='center'}
+ggplot(data = data, aes(x = sbp, y = ht, color = factor(sex))) + geom_point(alpha=0.5) + scale_color_manual(values = c("blue", "hot pink")) +
+ggtitle('Systolic Blood pressure VS. height, stratified by sex')
+```
+
+
+From the plot, we can see male and females have generally similar distribution in terms of systolic blood pressure. However, for subjects with `sbp` larger than 200, we see `sbq` increase with height in females while `sbq` decrease with height in males. Difference in height distribution among males and females is again validated.  
 
 
 ```{r}
 library(ggplot2)
 
-ggplot(data_CHD_Death_try, aes(x=age, y=ht)) + geom_point()
+ggplot(data, aes(x=age, y=ht)) + geom_point()
 
-ggplot(data_CHD_Death_try, aes(x=as.factor(sex), y=age)) + geom_boxplot()
+ggplot(data, aes(x=as.factor(sex), y=age)) + geom_boxplot()
 
-ggplot(data_CHD_Death_try, aes(x=wt, y=ht)) + geom_point()
+ggplot(data, aes(x=wt, y=ht)) + geom_point()
 ```
 
 
