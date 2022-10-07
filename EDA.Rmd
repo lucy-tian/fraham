@@ -101,13 +101,53 @@ From the plot, we can see male and females have generally similar distribution i
 
 
 ```{r}
-library(ggplot2)
-
-ggplot(data, aes(x=age, y=ht)) + geom_point()
-
-ggplot(data, aes(x=as.factor(sex), y=age)) + geom_boxplot()
-
-ggplot(data, aes(x=wt, y=ht)) + geom_point()
+ggplot(data, aes(x=age, fill=as.factor(diag))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Age Stratified by Diagnosis")
 ```
+
+From the histogram, we can observe that the distribution of age among CHD diagnosed patients is more skewed to the left as compared with the distribution of age among non-diagnosed patients. The mean of age among diagnosed patients is 46.84402, and the mean of age among non-diagnosed patients is 42.90192.
+
+
+```{r}
+ggplot(data, aes(x=ht, fill=as.factor(diag))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Height Stratified by Diagnosis")
+```
+
+
+
+
+```{r}
+ggplot(data, aes(x=wt, fill=as.factor(diag))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Weight Stratified by Diagnosis")
+```
+
+
+```{r}
+ggplot(data, aes(x=sc2, fill=as.factor(diag))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Serum Cholesterol at Exam 2 Stratified by Diagnosis")
+```
+
+```{r}
+ggplot(data, aes(x=dbp, fill=as.factor(diag))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Diastolic Blood Pressure Stratified by Diagnosis")
+```
+
+```{r}
+ggplot(data, aes(x=sbp, fill=as.factor(diag))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Systolic Blood Pressure Stratified by Diagnosis")
+```
+
 
 
