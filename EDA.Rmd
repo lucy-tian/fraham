@@ -61,7 +61,7 @@ From the grid above, we see that diagnosis of CHD (`diag`) has a relatively high
 
 We proceed to examine distribution of important variables respectively
 
-
+### Investigating relationship within and between variables
 #### Diagnosis frequency per exam
 ```{r, fig.align='center'}
 ggplot(data[data$diag!=0,], aes(x=cexam)) + geom_bar() + ggtitle('Diagnosis frequency per exam')
@@ -99,10 +99,32 @@ ggtitle('Systolic Blood pressure VS. height, stratified by sex')
 
 From the plot, we can see male and females have generally similar distribution in terms of systolic blood pressure. However, for subjects with `sbp` larger than 200, we see `sbq` increase with height in females while `sbq` decrease with height in males. Difference in height distribution among males and females is again validated.  
 
+
+#### Age distribution
+```{r, fig.align='center'}
+ggplot(data=data, aes(x=age, color=factor(sex))) + geom_bar() + scale_color_manual(values = c("blue", "hot pink")) + ggtitle('Age Distribution Stratified by Sex')
+summary(data$age)
+summary(data[data$sex==1,]$age)
+summary(data[data$sex==2,]$age)
+```
+From the bar plot above stratified by sex, we see male and female having generally similar, slightly right-skewed age distribution. The population age mean is 44.02, and mean age for male is slightly higher than that of female, with respective values 43.95 and 44.08. No obvious outliers observed.
+
 After investigating the relationship between each feature, we then delve into each one of them to compare the distribution among CHD diagnosed patients and CHD non-diagnosed patients.
 
+### Investigating relationship between variables and outcome (Diagnosis of CHD)
 
-```{r}
+#### Distribution of Sex Stratified by Diagnosis
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=as.factor(sex), fill=as.factor(diag))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge', stat="count") +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Frequency of Sex Stratified by Diagnosis")
+```
+From the histogram above, we see that higher proportion of males (sex=1) are diagnosed compared to females. This suggest sex may be a potential contributor to diagnosis and require further investigation.
+
+
+#### Distribution of Age Stratified by Diagnosis
+```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=age, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
@@ -111,8 +133,8 @@ ggplot(data, aes(x=age, fill=as.factor(diag))) +
 
 From the histogram, we can observe that the distribution of age among CHD diagnosed patients is more skewed to the left as compared with the distribution of age among non-diagnosed patients. The mean of age among diagnosed patients is 46.84402, and the mean of age among non-diagnosed patients is 42.90192.
 
-
-```{r}
+#### Distribution of Height Stratified by Diagnosis
+```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=ht, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
@@ -121,35 +143,115 @@ ggplot(data, aes(x=ht, fill=as.factor(diag))) +
 
 
 
-
-```{r}
+#### Distribution of Weight Stratified by Diagnosis
+```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=wt, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Weight Stratified by Diagnosis")
 ```
 
-
-```{r}
+#### Distribution of Serum Cholesterol at Exam 2 Stratified by Diagnosis
+```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=sc2, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Serum Cholesterol at Exam 2 Stratified by Diagnosis")
 ```
 
-```{r}
+#### Distribution of Diastolic Blood Pressure Stratified by Diagnosis
+```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=dbp, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Diastolic Blood Pressure Stratified by Diagnosis")
 ```
 
-```{r}
+#### Distribution of Systolic Blood Pressure Stratified by Diagnosis
+```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=sbp, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Systolic Blood Pressure Stratified by Diagnosis")
 ```
 
+### Investigating relationship between variables and outcome (Death by CHD)
+#### Frequency of Sex Stratified by Death
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=as.factor(sex), fill=as.factor(chd))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge', stat="count") +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Frequency of Sex Stratified by Death")
+```
+From the histogram above, we see that higher proportion of males (sex=1) result in death from CHD compared to females. This suggest sex may be a potential contributor to death from CHD require further investigation.
 
+
+#### Distribution of Age Stratified by Death
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=age, fill=as.factor(chd))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Age Stratified by Death")
+summary(data[data$chd==0,]$age)
+summary(data[data$chd==1,]$age)
+```
+From the histogram above, we see clearly different distribution of age among the alive and dead. For those who are alive with CHD (`chd`=0), the distribution of age is right skewed. For those who resulted in death from CHD (`chd`=1), the distribution of age is right skewed. This suggest that age may have a positive correlation with death from CHD. This can be further validated by the fact that alive patients have an age mean smaller that dead patients (43.49 vs 48.81)
+
+#### Distribution of Height Stratified by Death
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=ht, fill=as.factor(chd))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Height Stratified by Death")
+summary(data[data$chd==0,]$ht)
+summary(data[data$chd==1,]$ht)
+```
+From the histogram above, we see that alive CHD patients' height follow a roughly normal distribution, while those with death from CHD have a height distribution slightly left skewed.
+This suggest that height may have a positive correlation with death from CHD.
+
+#### Distribution of Weight Stratified by Death
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=wt, fill=as.factor(chd))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Weight Stratified by Death")
+summary(data[data$chd==0,]$wt)
+summary(data[data$chd==1,]$wt)
+```
+From the histogram above, we see that alive CHD patients' weight follow a slightly right-skewed distribution, while those with death from CHD have a height distribution slightly left skewed.
+This suggest that weight may have a positive correlation with death from CHD. We validate this by further comparing the respective means where alive patients have an average weight of 151.8lbs compared to that of dead patients with 163.9lbs.
+
+
+#### Distribution of Serum Cholesterol at Exam 2 Stratified by Death
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=sc2, fill=as.factor(chd))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Serum Cholesterol at Exam 2 Stratified by Death")
+summary(data[data$chd==0,]$sc2)
+summary(data[data$chd==1,]$sc2)
+```
+From the histogram above, we see that alive CHD patients' Serum Cholesterol at Exam 2 follow a slightly right-skewed distribution, while those with death from CHD have a Serum Cholesterol at Exam 2 distribution roughly normal. This suggest that Serum Cholesterol at Exam 2 may have a positive correlation with death from CHD. We validate this by further comparing the respective means where alive patients have an average `sc2` of 225.6 compared to that of dead patients with 248.2.
+
+#### Distribution of Diastolic Blood Pressure Stratified by Death
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=dbp, fill=as.factor(chd))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Diastolic Blood Pressure Stratified by Death")
+summary(data[data$chd==0,]$dbp)
+summary(data[data$chd==1,]$dbp)
+```
+From the histogram above, we see that both alive and dead CHD patients' Diastolic Blood Pressure follow a generally normal distribution. However, the range for dead CHD patients' Diastolic Blood Pressure is more to the right. The mean Diastolic Blood Pressure for alive patients is lower than that compared to dead patients (84.41 vs. 91.95). This suggest that `dbp` may have a positive correlation with death from CHD.
+
+#### Distribution of Systolic Blood Pressure Stratified by Death
+```{r, fig.align='center', message = FALSE}
+ggplot(data, aes(x=sbp, fill=as.factor(chd))) +
+    geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    labs(fill="", title= "Distribution of Systolic Blood Pressure Stratified by Death")
+summary(data[data$chd==0,]$sbp)
+summary(data[data$chd==1,]$sbp)
+```
+From the histogram above, we see that both alive CHD patients' Systolic Blood Pressure follow a slightly right-skewed distribution, while dead CHD patients' Systolic Blood Pressure follow a normal distribution. The range value for dead CHD patients' Systolic Blood Pressure is more to right. The mean Systolic Blood Pressure for alive patients is lower than that compared to dead patients (134.8 vs. 149.5). This suggest that `sbp` may have a positive correlation with death from CHD.
 
