@@ -1,6 +1,6 @@
 ---
 title: "EDA"
-author: "Group 10"
+author: "Group 10: Michelle Dai, Lucy Tian, Eli Wang"
 date: "2022-10-06"
 output: pdf_document
 ---
@@ -129,6 +129,9 @@ ggplot(data, aes(x=age, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Age Stratified by Diagnosis")
+    
+summary(data[data$diag == 0,]$age)
+summary(data[data$diag == 1,]$age)
 ```
 
 From the histogram, we can observe that the distribution of age among CHD diagnosed patients is more skewed to the left as compared with the distribution of age among non-diagnosed patients. The mean of age among diagnosed patients is 46.84402, and the mean of age among non-diagnosed patients is 42.90192.
@@ -139,9 +142,11 @@ ggplot(data, aes(x=ht, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Height Stratified by Diagnosis")
+    
+summary(data[data$diag == 0,]$ht)
+summary(data[data$diag == 1,]$ht)
 ```
-
-
+The distribution of Height stratified by diagnosis looks pretty normal for both groups. The mean of height among diagnosed patients is 65.24691, and the mean of age among non-diagnosed patients is 64.73006.
 
 #### Distribution of Weight Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
@@ -149,7 +154,12 @@ ggplot(data, aes(x=wt, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Weight Stratified by Diagnosis")
+
+summary(data[data$diag == 0,]$wt)
+summary(data[data$diag == 1,]$wt)
 ```
+
+The distribution of weight for CHD diagnosed patients is more normal as compared with the distribution of weight for CHD non-diagnosed patients. We observe a right-skewed distribution on the weight for non-diagnosed patients with mean of 149.9206 (161.3761 for diagnosed).
 
 #### Distribution of Serum Cholesterol at Exam 2 Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
@@ -157,7 +167,12 @@ ggplot(data, aes(x=sc2, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Serum Cholesterol at Exam 2 Stratified by Diagnosis")
+    
+summary(data[data$diag == 0,]$sc2)
+summary(data[data$diag == 1,]$sc2)
 ```
+
+From the histogram, we can observe that the distribution for Serum Cholesterol at Exam 2 among CHD non-diagnosed patients is more skewed to the right as compared with the distribution of Serum Cholesterol at Exam 2 among diagnosed patients. The mean of Serum Cholesterol at Exam 2 among diagnosed patients is 241.3, and the mean of Serum Cholesterol at Exam 2 among non-diagnosed patients is 223.
 
 #### Distribution of Diastolic Blood Pressure Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
@@ -165,7 +180,12 @@ ggplot(data, aes(x=dbp, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Diastolic Blood Pressure Stratified by Diagnosis")
+    
+summary(data[data$diag == 0,]$dbp)
+summary(data[data$diag == 1,]$dbp)
 ```
+
+From the histogram, the distributions for Diastolic Blood Pressure among both groups are pretty normal. The distribution for Diastolic Blood Pressure among CHD non-diagnosed patients is comparatively more skewed to the right as compared with the distribution of Diastolic Blood Pressure among diagnosed patients. The mean of Diastolic Blood Pressure among diagnosed patients is 89.06, and the mean of Diastolic Blood Pressure among non-diagnosed patients is 83.78.
 
 #### Distribution of Systolic Blood Pressure Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
@@ -173,7 +193,12 @@ ggplot(data, aes(x=sbp, fill=as.factor(diag))) +
     geom_histogram( color="#e9ecef", alpha=0.7, position = 'dodge') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Distribution of Systolic Blood Pressure Stratified by Diagnosis")
+    
+summary(data[data$diag == 0,]$sbp)
+summary(data[data$diag == 1,]$sbp)
 ```
+
+From the histogram, we can observe that the distribution for Systolic Blood Pressure among CHD non-diagnosed patients is more skewed to the right as compared with the distribution of Systolic Blood Pressure among diagnosed patients. The mean of Systolic Blood Pressure among diagnosed patients is 144.2, and the mean of Systolic Blood Pressure among non-diagnosed patients is 133.5.
 
 ### Investigating relationship between variables and outcome (Death by CHD)
 #### Frequency of Sex Stratified by Death
