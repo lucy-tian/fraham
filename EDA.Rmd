@@ -36,8 +36,12 @@ We perform EDA based on our primary and secondary questions.
 $\textbf{What factors contribute to the diagnosis of coronary heart disease (CHD)?}$
 
 #### Secondary Question
-$\textbf{Is there an association between physiological features} $
+$\textbf{Is there an association between physiological features}$
+
+
 $\textbf{(example being height, weight, and blood pressure) and death from CHD?}$
+
+
 
 Since we first look at the diagnosis of CHD, we create a new column `diag` where observations diagnosed with CHD takes value on 1 and 0 otherwise.
 
