@@ -16,7 +16,7 @@ data <- read.dta("fram.dta")
 ### Date Cleaning
 According to the documentation of the Framingham Dataset, the original data has a total of 5209 observations and 18 variables recorded. For column `scl1`, we have a total of 2, 037 missing values. Thus for the sake of retaining as much data as possible for future analysis, we will drop the `scl1` column. 
 
-To deal with other missing values, we approach with the simple method of dropping observations that contain on or more missing values. Other methods such as imputation will be used later if see fit.
+To deal with other missing values, we approach with the simple method of dropping observations that contain one or more missing values. Other methods such as imputation will be used later if see fit.
 
 ```{r, message=FALSE}
 library(dplyr)
@@ -27,6 +27,8 @@ data <- data[complete.cases(data),]
 
 A total of 4,568 observations and 17 columns are selected for exploratory data analysis.
 
+_To see the detailed description of each variable and the values these variables refer to, please jump to the supplementary: Code Book._
+
 ### Exploratory Data Analysis (EDA)
 We perform EDA based on our primary and secondary questions.
 
@@ -34,14 +36,15 @@ We perform EDA based on our primary and secondary questions.
 $\textbf{What factors contribute to the diagnosis of coronary heart disease (CHD)?}$
 
 #### Secondary Question
-$\textbf{Is there an association between physiological features (example being height, weight, and blood pressure) and death from CHD?}$
+$\textbf{Is there an association between physiological features} $
+$\textbf{(example being height, weight, and blood pressure) and death from CHD?}$
 
-Since we first look at the diagnosis of CHD, create a new column `diag` where observations diagnosed with CHD = 1 and 0 otherwise
+Since we first look at the diagnosis of CHD, we create a new column `diag` where observations diagnosed with CHD takes value on 1 and 0 otherwise.
 
 ```{r}
 data <- data %>% mutate(diag = if_else(cexam == 0, 0, 1))
 ```
-Simple calculation gives us CHD Diagnosis count = 1449 and CHD Death count = 605
+Here we get 1295 CHD diagnosed observations and 528 CHD death observations.
 
 
 We then plot a grid that calculates correlation between each variable pairs.
@@ -53,13 +56,12 @@ M = cor(data[, -c(4)])
 corrplot(M, addCoef.col = 'black',  number.cex= 7/(ncol(data) - 4))
 ```
 
-
 The plot makes sense as we see very high correlation between variable pairs [`weight`, `mrw`, cor=0.76] and [`dbp`, `sbp`, cor=0.8]. `mrw` - Metropolitan Relative Weight- can be calculated by taking ratio of that person's body weight to the reference weight for that person's height, and systolic and diabolic pressures are highly correlated as they each represent the maximum pressure the heart exerts while beating and the amount of pressure in the arteries between beats.
 
 From the grid above, we see that diagnosis of CHD (`diag`) has a relatively higher correlation with `age`, `sbp` (Systolic blood pressure), and `mrw` (Metropolitan Relative Weight) with values 0.21, 0.21, and 0.15 respectively. Death from CHD (`chd`) has a relatively higher correlation with `age`, `sc2`, `sbp`, and `weight`, with values 0.2, 0.16, 0.2, and 0.14 respectively. 
 
 
-We proceed to examine distribution of important variables respectively
+We proceed to examine distribution of important variables respectively.
 
 ### Investigating relationship within and between variables
 #### Diagnosis frequency per exam
@@ -68,7 +70,7 @@ ggplot(data[data$diag!=0,], aes(x=cexam)) + geom_bar() + ggtitle('Diagnosis freq
 ```
 
 
-From the bar plot above, we see for those diagnosed with CHD, the frequency of diagnosis for each exam generally increases until the 11th exam, which reached the maximum frequency o greater than 120. After the 11th exam, frequency of diagnosis show a downward trend.
+From the bar plot above, we see for those diagnosed with CHD, the frequency of diagnosis for each exam generally increases until the 11th exam, which reached the maximum frequency of greater than 120 cases. After the 11th exam, frequency of diagnosis show a downward trend.
 
 #### Weight distribution stratidied by sex
 ```{r, fig.align='center'}
@@ -78,7 +80,7 @@ summary(data[data$sex==2,]$wt)
 ```
 
 
-From the side by side box plot above, we see females generally have a lower weight than males. Males have a median values of 167lbs and females 138lbs. In addition, females have more outliers compared to males and includes both the minimum (71lbs) and maximum (300lbs) values of the total sample of subjects studies.
+From the side by side box plot above, we see females (`sex` = 2) generally have a lower weight than males. Males (`sex` = 1) have a median values of 167 lbs and females 138 lbs. In addition, females have more outliers compared to males and includes both the minimum (71 lbs) and maximum (300 lbs) values of the total sample of subjects studies.
 
 #### Height distribution stratified by sex
 ```{r, fig.align='center'}
@@ -109,7 +111,7 @@ summary(data[data$sex==2,]$age)
 ```
 From the bar plot above stratified by sex, we see male and female having generally similar, slightly right-skewed age distribution. The population age mean is 44.02, and mean age for male is slightly higher than that of female, with respective values 43.95 and 44.08. No obvious outliers observed.
 
-After investigating the relationship between each feature, we then delve into each one of them to compare the distribution among CHD diagnosed patients and CHD non-diagnosed patients.
+After investigating the relationship between each feature, we then delve into each one of them to compare the distributions among CHD diagnosed patients and CHD non-diagnosed patients.
 
 ### Investigating relationship between variables and outcome (Diagnosis of CHD)
 
@@ -136,6 +138,8 @@ summary(data[data$diag == 1,]$age)
 
 From the histogram, we can observe that the distribution of age among CHD diagnosed patients is more skewed to the left as compared with the distribution of age among non-diagnosed patients. The mean of age among diagnosed patients is 46.84402, and the mean of age among non-diagnosed patients is 42.90192.
 
+This may suggest that age is positively correlated with CHD diagnosis.
+
 #### Distribution of Height Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=ht, fill=as.factor(diag))) +
@@ -147,6 +151,7 @@ summary(data[data$diag == 0,]$ht)
 summary(data[data$diag == 1,]$ht)
 ```
 The distribution of Height stratified by diagnosis looks pretty normal for both groups. The mean of height among diagnosed patients is 65.24691, and the mean of age among non-diagnosed patients is 64.73006.
+
 
 #### Distribution of Weight Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
@@ -174,6 +179,8 @@ summary(data[data$diag == 1,]$sc2)
 
 From the histogram, we can observe that the distribution for Serum Cholesterol at Exam 2 among CHD non-diagnosed patients is more skewed to the right as compared with the distribution of Serum Cholesterol at Exam 2 among diagnosed patients. The mean of Serum Cholesterol at Exam 2 among diagnosed patients is 241.3, and the mean of Serum Cholesterol at Exam 2 among non-diagnosed patients is 223.
 
+This might suggest a positive relationship between `sc2` and CHD diagnosis.
+
 #### Distribution of Diastolic Blood Pressure Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
 ggplot(data, aes(x=dbp, fill=as.factor(diag))) +
@@ -185,7 +192,7 @@ summary(data[data$diag == 0,]$dbp)
 summary(data[data$diag == 1,]$dbp)
 ```
 
-From the histogram, the distributions for Diastolic Blood Pressure among both groups are pretty normal. The distribution for Diastolic Blood Pressure among CHD non-diagnosed patients is comparatively more skewed to the right as compared with the distribution of Diastolic Blood Pressure among diagnosed patients. The mean of Diastolic Blood Pressure among diagnosed patients is 89.06, and the mean of Diastolic Blood Pressure among non-diagnosed patients is 83.78.
+There is a bimodal distribution for Diastolic Blood Pressure among the diagnosed patients with mean of 89.06. The distribution of Diastolic Blood Pressure among non-diagnosed patients is a bit right-skewed with mean of 83.78.
 
 #### Distribution of Systolic Blood Pressure Stratified by Diagnosis
 ```{r, fig.align='center', message = FALSE}
@@ -200,6 +207,8 @@ summary(data[data$diag == 1,]$sbp)
 
 From the histogram, we can observe that the distribution for Systolic Blood Pressure among CHD non-diagnosed patients is more skewed to the right as compared with the distribution of Systolic Blood Pressure among diagnosed patients. The mean of Systolic Blood Pressure among diagnosed patients is 144.2, and the mean of Systolic Blood Pressure among non-diagnosed patients is 133.5.
 
+This might suggest a positive relationship between `sbp` and CHD diagnosis.
+
 ### Investigating relationship between variables and outcome (Death by CHD)
 #### Frequency of Sex Stratified by Death
 ```{r, fig.align='center', message = FALSE}
@@ -208,7 +217,7 @@ ggplot(data, aes(x=as.factor(sex), fill=as.factor(chd))) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     labs(fill="", title= "Frequency of Sex Stratified by Death")
 ```
-From the histogram above, we see that higher proportion of males (sex=1) result in death from CHD compared to females. This suggest sex may be a potential contributor to death from CHD require further investigation.
+From the histogram above, we see that higher proportion of males (sex=1) result in death from CHD compared to females. This suggests sex may be a potential contributor to death from CHD require further investigation.
 
 
 #### Distribution of Age Stratified by Death
@@ -232,6 +241,8 @@ summary(data[data$chd==0,]$ht)
 summary(data[data$chd==1,]$ht)
 ```
 From the histogram above, we see that alive CHD patients' height follow a roughly normal distribution, while those with death from CHD have a height distribution slightly left skewed.
+
+
 This suggest that height may have a positive correlation with death from CHD.
 
 #### Distribution of Weight Stratified by Death
@@ -244,6 +255,8 @@ summary(data[data$chd==0,]$wt)
 summary(data[data$chd==1,]$wt)
 ```
 From the histogram above, we see that alive CHD patients' weight follow a slightly right-skewed distribution, while those with death from CHD have a height distribution slightly left skewed.
+
+
 This suggest that weight may have a positive correlation with death from CHD. We validate this by further comparing the respective means where alive patients have an average weight of 151.8lbs compared to that of dead patients with 163.9lbs.
 
 
