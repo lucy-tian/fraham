@@ -103,3 +103,72 @@ p_mod <- glm(formula = count ~ sex + age + sc1 + sc2 + dbp + sbp + smoke + bmi, 
 robust <- coeftest(p_mod, vcov=sandwich)
 robust
 ```
+
+## Logistic Lasso for diagnosis
+```{r}
+library(glmnet)
+y = as.matrix(data_imputed$diag)
+
+x = as.matrix(select(data_imputed, c('sex', 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi')))
+
+cv_model <- cv.glmnet(x, y, alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda <- cv_model$lambda.min
+best_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_model) 
+
+best_model <- glmnet(x, y, alpha = 1, family = "binomial", lambda = best_lambda)
+coef(best_model)
+
+```
+
+## Logistic Lasso for CHD death
+```{r}
+library(glmnet)
+y = as.matrix(data_imputed$chd)
+
+x = as.matrix(select(data_imputed, c('sex', 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi')))
+
+cv_model <- cv.glmnet(x, y, alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda <- cv_model$lambda.min
+best_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_model) 
+
+best_model <- glmnet(x, y, alpha = 1, family = "binomial", lambda = best_lambda)
+coef(best_model)
+```
+
+## create categorical cexam for multinomial
+```{r}
+library(magrittr) # needs to be run every time you start R and want to use %>%
+library(dplyr)
+
+data_imputed %<>%
+  mutate(cexam_comb = case_when(
+    cexam %in% 0 ~ "0",
+    cexam %in% 1 ~ "1",
+    cexam %in% 2:6 ~ "2",
+    cexam %in% 7:11 ~ "3",
+    cexam %in% 12:16 ~ "4"
+  ))
+```
+
+## Multinomial
+```{r}
+library(nnet)
+x =  as.matrix(select(data_imputed, c('sex', 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi')))
+y = as.matrix(data_imputed$cexam_comb)
+mod = multinom(y~x)
+summary(mod)
+
+tidy(mod, exponentiate=FALSE,conf.int=TRUE) %>%
+  knitr::kable(digits=3,format="markdown")
+
+```
