@@ -127,8 +127,6 @@ coef(best_model)
 ```
 
 ### Multinomial Logistic
-
-
 ```{r}
 library(magrittr) # needs to be run every time you start R and want to use %>%
 library(dplyr)
@@ -157,31 +155,24 @@ tidy(mod, exponentiate=FALSE,conf.int=TRUE) %>%
 ```
 
 
-### Poisson Modeling for diagnosis count per exam category
-
-We first examine whether the mean=variance assumption hold
-
-```{r}
-p_data <- dplyr::select(data_imputed, c('sex', 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi','cexam', 'bmi_sq'))
-p_data <- p_data %>% mutate(count = if_else(cexam!=0, 1, 0))
-### calculate exposure time for offset, average exam interval is 3 years
-p_data <- p_data %>% mutate(years = case_when(cexam == 0 ~ 15 * 3,
-                                              cexam == 1 ~ 0.1,
-                                              cexam != 0 & cexam != 1 ~ (cexam -1) * 3))
-summary(p_data)
-```
-
+### Poisson / Negative Binomial
 ```{r}
 library(sandwich)
 library(lmtest)
-p_mod <- glm(formula = count ~ sex + age + sc1 + sc2 + dbp + sbp + smoke + bmi + offset(years), data= p_data, family=poisson())
-robust <- coeftest(p_mod, vcov=sandwich)
-robust
-```
-
-### Negative Binomial
-```{r}
 library(MASS)
+p_data <- dplyr::select(data_imputed, c('sex', 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi','cexam', 'bmi_sq'))
+p_data <- p_data %>% mutate(count = if_else(cexam!=0, 1, 0))
+### calculate exposure time for offset, average exam interval is 2 years
+p_data <- p_data %>% mutate(years = case_when(cexam == 0 ~ 15 * 2,
+                                              cexam == 1 ~ 0.1,
+                                              cexam != 0 & cexam != 1 ~ (cexam -1) * 2))
+p_mod <- glm(formula = count ~ sex + age + sc1 + sc2 + dbp + sbp + smoke + bmi + offset(years), data= p_data, family=poisson())
+deviance(p_mod)/p_mod$df.residual
+```
+#### Diagnosis
+Fitting the Poisson model show overdispersion. In combination with the fact that our outcome is dichotomous, we switch to negative binomial to address the problem.
+```{r, warning=FALSE}
 negative_binomial <- glm.nb(count ~ sex + age + sc1 + sc2 + dbp + sbp + smoke + bmi, data = p_data)
 summary(negative_binomial)
+exp(0.0257415)
 ```
