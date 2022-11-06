@@ -1,0 +1,205 @@
+---
+title: "Code and Graphs"
+author: "Michelle Dai, Lucy Tian, Eli Wang"
+date: "2022-11-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(foreign)
+library(mice)
+data <- read.dta("fram.dta")
+```
+
+## Q4. Missing Data Analysis
+
+### Types of Missingness
+
+From the plot below, we see 14 different patterns of missingness. Patterns with most missing values are $\textbf{1. missing in sc1}$,  $\textbf{2.missing in sc2}$, and $\textbf{3. missing in sc1 and sc2}$. 
+
+```{r, fig.width=10}
+md.pattern(data, rotate.names = TRUE)
+```
+
+By fitting the logistic regression of indicator `R1` with the rest of the covariate, we identify significant predictors with p-values less than 0.05. These are `cexam`, `sex`, `dbp`, `smoke`, and `sc2`. Thus we say that missingness in `sc1` is NOT MCAR. 
+
+
+By fitting the logistic regression of indicator `R2` with the rest of the covariate, we identify significant predictors with p-values less than 0.05. These are `Lexam`, `dbp`, and `sbp`. Thus we say that missingness in `sc2` is NOT MCAR. 
+
+
+By fitting the logistic regression of indicator `R3` with the rest of the covariate, we did NOT identify significant predictors with p-values less than 0.05. T= Thus we say that missingness in the (`sc1`, `sc2`) pair is MCAR. 
+
+
+```{r}
+### Create indicator variable R1 where R1=1 if sample experience missingness in sc1
+data <- data %>% mutate(R1 = if_else(is.na(sc1), 1, 0))
+data <- data %>% mutate(R2 = if_else(is.na(sc2), 1, 0))
+data <- data %>% mutate(R3 = if_else(R1+R2==2, 1, 0))
+### Test for MCAR by logistic regression
+logit1 <- glm(R1 ~ lexam + surv + cause + cexam + cva + ca + oth + sex + age + dbp + sbp + ht + wt + mrw + smoke +sc2, data = data, family = "binomial")
+summary(logit1)
+logit2 <- glm(R2 ~ lexam + surv + cause + cexam + cva + ca + oth + sex + age + dbp + sbp + ht + wt + mrw + smoke +sc1, data = data, family = "binomial")
+summary(logit2)
+logit3 <- glm(R3 ~ lexam + surv + cause + cexam + cva + ca + oth + sex + age + dbp + sbp + ht + wt + mrw + smoke, data = data, family = "binomial")
+summary(logit3)
+```
+
+To argue for whether missingness in `sc1` is MAR or MNAR, we reason with context. `sc1` stands for serum cholesterol exam 1, which is the serum cholesterol level of each individual from their first exam.  For `sc1` to be MNAR, it's missingness has to be dependent on `sc1` itself. This means those with higher or lower `sc1` may be less or more likely to take the examination. Since we see no logical explanation behind the former statement, we are more inclined to conclude that are data is MAR. Using the same logic, we say missingness in`sc2` is also MAR.
+
+### Accomodation
+
+We first examine the total number of missing values per column. The 5% threshold is 260. We see only missing values in `sc1` and `sc2` with count greater than the threshold. Thus, for columns with missing value count less than the threshold, one method would be to use the Complete Case Analysis or use multiple imputing to help dealing with these missing data (we consider multiple imputing to be more achievable here as MICE would help us dealing with this).
+
+```{r}
+colSums(is.na(data))
+sum(is.na(data$sc1)) / nrow(data)
+sum(is.na(data$sc2)) / nrow(data)
+nrow(data) * 0.05
+```
+
+From the pattern plot above, among the 14 patterns of missing data, only the top 4 has significant count of missing values. Hence, we use Multivariate Imputation with 4 imputations.
+
+To ensure our imputation did not add new information to the data, we drew correlation plots for data before (only include complete cases) and after imputation. We can see from below that the plot looks very similar.
+
+```{r}
+library(corrplot)
+data <- data %>% mutate(diag = if_else(cexam == 0, 0, 1))
+tempData = mice(data, m =4, "pmm", printFlag = FALSE, seed = 2022)
+data_imputed <- complete(tempData, action=1)
+```
+
+```{r}
+# data before imputing
+N = cor(data[complete.cases(data), -c(4, 19, 20, 21)])
+corrplot(N, addCoef.col = 'black',  number.cex= 7/(ncol(data) - 4))
+
+# data after imputing
+M = cor(data_imputed[, -c(4, 19, 20, 21)])
+corrplot(M, addCoef.col = 'black',  number.cex= 7/(ncol(data) - 4))
+```
+
+## Q5 Model fitting.
+
+We first include a `BMI` column and drop `wt`, `ht`, and `mrw` since `BMI` is a linear combination of the dropped variables.
+
+```{r}
+data_imputed$bmi = 703 * data_imputed$wt / (data_imputed$ht)^2
+
+# we also tried to incorporate quadratic bmi as commented by Nicholas
+data_imputed$bmi_sq = (data_imputed$bmi)^2
+
+data_imputed <- data_imputed %>% mutate(age_diag = if_else(cexam == 0, age+2*15, age+2*(cexam-1)))
+```
+
+### Logistic Lasso
+
+We apply Logistic Lasso here to narrow down our lists of covariates.
+
+```{r}
+library(glmnet)
+y = as.matrix(data_imputed$diag)
+
+x = as.matrix(dplyr::select(data_imputed, c(as.factor('sex'), 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi', 'bmi_sq')))
+
+cv_model <- cv.glmnet(x, y, alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda <- cv_model$lambda.min
+best_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_model) 
+
+best_model <- glmnet(x, y, alpha = 1, family = "binomial", lambda = best_lambda)
+coef(best_model)
+
+# to check assumption for non-normal residuals
+hist(y-strtoi(predict(best_model, newx = x, type = 'class')))
+```
+
+
+```{r}
+library(glmnet)
+y = as.matrix(data_imputed$chd)
+
+x = as.matrix(dplyr::select(data_imputed, c(as.factor('sex'), 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi', 'bmi_sq')))
+
+cv_model <- cv.glmnet(x, y, alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda <- cv_model$lambda.min
+best_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_model) 
+
+best_model <- glmnet(x, y, alpha = 1, family = "binomial", lambda = best_lambda)
+coef(best_model)
+```
+
+### Logistic Regression
+
+Then we used our covariates of selection to fit logistic regression model.
+
+```{r}
+library(nnet)
+library(VGAM)
+library(dplyr)
+library(ResourceSelection)
+
+table(data_imputed$diag) # check assumption
+
+x = as.matrix(dplyr::select(data_imputed, c(as.factor('sex'), 'age_diag', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi')))
+
+mod = multinom(diag~as.factor(sex)+age_diag+sc1+sc2+dbp+sbp+smoke+bmi, data = data_imputed, family = "binomial")
+summary(mod)
+
+tidy(mod, exponentiate=TRUE,conf.int=TRUE) %>%
+  knitr::kable(digits=3,format="markdown")
+
+AIC(mod)
+
+hoslem.test(data_imputed$diag, strtoi(predict(mod, newx = x, type = 'class')), g=7)
+
+library(pROC)
+
+predprob <- predict(mod, type= "probs")
+roccurve <- roc(data_imputed$diag ~ predprob)
+plot(roccurve, col = "red")
+
+auc(roccurve)
+```
+
+
+### Poisson / Negative Binomial
+
+
+```{r}
+library(sandwich)
+library(lmtest)
+library(MASS)
+p_data <- dplyr::select(data_imputed, c('sex', 'age', 'sc1', 'sc2', 'dbp', 'sbp', 'smoke', 'bmi','cexam', 'bmi_sq'))
+p_data <- p_data %>% mutate(count = if_else(cexam!=0, 1, 0))
+
+### calculate exposure time for offset, average exam interval is 2 years
+p_data <- p_data %>% mutate(years = case_when(cexam == 0 ~ 15 * 2,
+                                              cexam == 1 ~ 0.1,
+                                              cexam != 0 & cexam != 1 ~ (cexam -1) * 2))
+p_mod <- glm(formula = count ~ sex + age + sc1 + sc2 + dbp + sbp + smoke + bmi + offset(years), data= p_data, family=poisson())
+deviance(p_mod)/p_mod$df.residual
+```
+
+#### Diagnosis
+
+Fitting the Poisson model show overdispersion. In combination with the fact that our outcome is dichotomous, we switch to negative binomial to address the problem.
+
+```{r, warning=FALSE}
+negative_binomial <- glm.nb(count ~ sex + age + sc1 + sc2 + dbp + sbp + smoke + bmi, data = p_data)
+summary(negative_binomial)
+exp(0.0257415)
+```
